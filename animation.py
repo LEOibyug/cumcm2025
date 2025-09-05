@@ -14,10 +14,10 @@ target = Items.Volume(np.array([0, 200, 5]), 7, 10)
 
 m1 = Items.Missile(np.array([20000, 0, 2000]), fake_target,1)
 
-fy_dir_1 = np.array([17800,0,1800]) - fake_target.pos
-fy_speed_1 = 120
-drop_t1 = [1.5] # 假设在 1.5s 时投掷烟雾
-fy1 = Items.Drone(np.array([17800,0,1800]), -fy_dir_1, fy_speed_1,1)
+fy_dir_1 = [0.9956142,0.0935541,0]
+fy_speed_1 = 103.6163
+drop_t1 = [0.8725] # 假设在 1.5s 时投掷烟雾
+fy1 = Items.Drone(np.array([17800,0,1800]), fy_dir_1, fy_speed_1,1)
 
 # 仿真参数
 TIME_STEP = 0.005
@@ -55,7 +55,7 @@ for frame_idx in tqdm(range(num_frames + 1), desc="Simulating Frames"):
     # 检查是否需要投掷烟雾
     for drop_time in drop_t1:
         if abs(current_time_pre_calc - drop_time) < TIME_STEP / 2 and drop_time not in smoke_dropped_times_pre_calc:
-            smoke = fy1.drop(3.6)
+            smoke = fy1.drop(0.2591)
             current_simulation_dynamic_participants.append(smoke)
             all_history_pos[smoke] = [] # 为新加入的 smoke 实例初始化历史位置
             smoke_dropped_times_pre_calc.add(drop_time)
@@ -290,8 +290,8 @@ def animate(frame_idx):
 ani = FuncAnimation(fig, animate, frames=len(all_frames_data), interval=ANIMATION_INTERVAL_MS, blit=True) 
 
 
-with tqdm(total=len(all_frames_data), desc="Saving Animation") as pbar:
-    ani.save("1.mp4", writer='ffmpeg', fps=1000 / ANIMATION_INTERVAL_MS, dpi=150, progress_callback=lambda i, n: pbar.update(1))
+# with tqdm(total=len(all_frames_data), desc="Saving Animation") as pbar:
+#     ani.save("1.mp4", writer='ffmpeg', fps=1000 / ANIMATION_INTERVAL_MS, dpi=150, progress_callback=lambda i, n: pbar.update(1))
 
 plt.show()
 

@@ -77,6 +77,12 @@ def run_simulation(
           例如: {1: 10.5, 2: 8.2, 'all_missiles_obscured': 3.1}
     """
     # 构建导弹和无人机的ID映射
+    print("----------------------------------------------------------------------")
+    print(f"Simulation parameters: time_step={time_step}, simulation_duration={simulation_duration}, smoke_radius={smoke_radius}")
+    for i in drone_list:
+        print(f"Drone {i.id} with speed {i.speed} and direction {i.direction}")
+    print(f"Drone drop events: {drop_events}")
+    print("----------------------------------------------------------------------")
     missiles_by_id = {}
     for m in missile_list:
         missiles_by_id[m.id] = m
@@ -123,7 +129,7 @@ def run_simulation(
                             smoke = drone_to_drop.drop(clock_value)
                             current_simulation_dynamic_participants.append(smoke)
                             smoke_dropped_event_keys.add(event_key)
-                            print(f"Smoke dropped by drone {drone_id} at time {current_time_pre_calc}s.")
+                            print(f"Smoke dropped by drone {drone_id} at {current_time_pre_calc}s.")
                         else:
                             print(f"Warning: Drone with ID {drone_id} not found for drop event at time {drop_time_event}s.")
                 drop_event_idx += 1 # 处理完这个时间点的所有事件，移动到下一个

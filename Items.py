@@ -74,7 +74,6 @@ class Volume(Item):
     
     def get_sample(self):
         samples = []
-        z_bottom = self.pos[2] - self.height / 2
         z_top = self.pos[2] + self.height / 2
         # 1. 圆柱侧面采样
         for z_offset in np.arange(-self.height / 2, self.height / 2 + 1,1): 

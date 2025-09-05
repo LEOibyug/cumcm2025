@@ -7,22 +7,20 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 from tqdm import tqdm
 
-# 从 utils.py 导入功能函数
-from utils import plot_sphere, is_line_segment_obscured_by_sphere
 
 fake_target = Items.Plot(np.array([0, 0, 0]))
 target = Items.Volume(np.array([0, 200, 5]), 7, 10)
-stastic_participants_list = [fake_target]
+stastic_participants_list = []
 for i in target.get_sample():
     stastic_participants_list.append(i)
 
-m1 = Items.Missile(np.array([20000, 0, 2000]), fake_target,1)
+m1 = Items.Missile([20000, 0, 2000], fake_target,1)
 # m2 = Items.Missile(np.array([19000, 600, 2100]), fake_target)
 # m3 = Items.Missile(np.array([18000,-600,1900]), fake_target)
 
-fy_dir_1 = [-0.99993885,0.01105904,0]
+fy_dir_1 = [-1,0,0]
 fy_speed_1 = 120
-fy1 = Items.Drone(np.array([17800,0,1800]), fy_dir_1, fy_speed_1,1)
+fy1 = Items.Drone([17800,0,1800], fy_dir_1, fy_speed_1,1)
 
 # fy_dir_2 = np.array([0, 0, 1])
 # fy_speed_2 = 100
@@ -46,13 +44,14 @@ fy1 = Items.Drone(np.array([17800,0,1800]), fy_dir_1, fy_speed_1,1)
 
 
 # 仿真参数
-TIME_STEP = 0.01
+TIME_STEP = 0.005
 SIMULATION_DURATION = 20
 SMOKE_RADIUS = 10 # 烟雾球体半径
 drop_events = {
-    0.9758:[(1,3.8205)],
-    2.4758:[(1,5)],
-    3.9758:[(1,5)],
+    1.5:[(1,3.6)],
+    2.5:[(1,5)],
+    3.5:[(1,5)],
+
 }
 
 res = utils.run_simulation([m1],[fy1],stastic_participants_list,drop_events,TIME_STEP,SIMULATION_DURATION,SMOKE_RADIUS)
