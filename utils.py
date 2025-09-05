@@ -104,41 +104,33 @@ def run_simulation(
     
     num_frames = int(simulation_duration / time_step)
 
-    # 将 drop_events 转换为列表，并按时间排序，方便遍历
-    # 这样可以避免在每次循环中遍历整个 drop_events 字典
     sorted_drop_events = sorted(drop_events.items())
     drop_event_idx = 0 # 用于跟踪当前要检查的投弹事件索引
 
-    for frame_idx in tqdm(range(num_frames + 1), desc="Simulating Frames"):
+    for frame_idx in range(num_frames + 1):
         
         # 检查是否需要投掷烟雾
-        # 遍历所有未触发的投弹事件
         while drop_event_idx < len(sorted_drop_events):
             drop_time_event, events_at_this_time = sorted_drop_events[drop_event_idx]
             
-            # 如果当前仿真时间已经达到或超过投弹时间，并且在当前时间步长内
-            # 使用一个小的容差来处理浮点数比较
             if current_time_pre_calc >= drop_time_event - time_step / 2 and \
-               current_time_pre_calc < drop_time_event + time_step / 2: # 检查当前时间步长是否“跨过”了投弹时间
-                
+               current_time_pre_calc < drop_time_event + time_step / 2: 
                 for drone_id, clock_value in events_at_this_time:
-                    event_key = (drop_time_event, drone_id, clock_value) # 使用原始的 drop_time_event 作为 key
+                    event_key = (drop_time_event, drone_id, clock_value) 
                     if event_key not in smoke_dropped_event_keys:
                         drone_to_drop = drones_by_id.get(drone_id)
                         if drone_to_drop:
                             smoke = drone_to_drop.drop(clock_value)
                             current_simulation_dynamic_participants.append(smoke)
                             smoke_dropped_event_keys.add(event_key)
+                            print(f"Smoke dropped by drone {drone_id} at time {current_time_pre_calc}s.")
                         else:
                             print(f"Warning: Drone with ID {drone_id} not found for drop event at time {drop_time_event}s.")
                 drop_event_idx += 1 # 处理完这个时间点的所有事件，移动到下一个
             elif current_time_pre_calc > drop_time_event + time_step / 2:
-                # 如果当前时间已经远远超过这个投弹时间，说明这个事件可能被跳过了
-                # 或者在之前的某个时间步长中被处理了（如果 drop_time_event 接近上一个时间步长）
-                # 无论如何，我们应该继续检查下一个投弹事件
+   
                 drop_event_idx += 1
             else:
-                # 如果当前时间还没到这个投弹时间，就停止检查，等待下一个时间步长
                 break
 
 
@@ -148,7 +140,7 @@ def run_simulation(
         
         active_smokes = [s for s in current_simulation_dynamic_participants if isinstance(s, Items.Smoke) and s.display]
         # 跟踪每个导弹的遮挡
-        missiles_obscured_status = {} # {missile_id: True/False}
+        missiles_obscured_status = {} 
         
         # 遍历所有导弹，进行单独的遮挡检测
         for missile_id, missile_obj in missiles_by_id.items():
@@ -201,6 +193,6 @@ def run_simulation(
             print(f"  All Missiles Obscured: {value:.4f}s")
         else:
             print(f"  Missile {key} Obscured: {value:.4f}s")
-            
+    print("---------------------------------------------\n")
     return obscured_durations
 

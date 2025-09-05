@@ -21,7 +21,7 @@ m1 = Items.Missile(np.array([20000, 0, 2000]), fake_target,1)
 # m3 = Items.Missile(np.array([18000,-600,1900]), fake_target)
 
 fy_dir_1 = [-0.99993885,0.01105904,0]
-fy_speed_1 = 119.7736
+fy_speed_1 = 120
 fy1 = Items.Drone(np.array([17800,0,1800]), fy_dir_1, fy_speed_1,1)
 
 # fy_dir_2 = np.array([0, 0, 1])
@@ -46,13 +46,13 @@ fy1 = Items.Drone(np.array([17800,0,1800]), fy_dir_1, fy_speed_1,1)
 
 
 # 仿真参数
-TIME_STEP = 0.001
+TIME_STEP = 0.01
 SIMULATION_DURATION = 20
 SMOKE_RADIUS = 10 # 烟雾球体半径
 drop_events = {
     0.9758:[(1,3.8205)],
     2.4758:[(1,5)],
-    3.9758:[(1,5.01)],
+    3.9758:[(1,5)],
 }
 
 res = utils.run_simulation([m1],[fy1],stastic_participants_list,drop_events,TIME_STEP,SIMULATION_DURATION,SMOKE_RADIUS)

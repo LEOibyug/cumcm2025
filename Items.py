@@ -46,6 +46,7 @@ class Smoke(Item):
             self.clock -= time_step
             if self.clock < 0:
                 self.display = True
+                print("Smoke is now active")
     
     
 class Drone(Item):

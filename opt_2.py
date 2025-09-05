@@ -87,18 +87,14 @@ def objective_for_minimize(params):
 
     return -obscured_duration
 
-# --- 定义优化起点 (Initial Guess) ---
-initial_fy_dir_raw = np.array([0, 0, 0]) - np.array([17800, 0, 1800])
-initial_fy_dir_norm = np.linalg.norm(initial_fy_dir_raw)
-initial_fy_dir_x = initial_fy_dir_raw[0] / initial_fy_dir_norm
-initial_fy_dir_y = initial_fy_dir_raw[1] / initial_fy_dir_norm
+# --- 定义优化起点 (Initial Guess) --
 
 initial_guess = np.array([
-    120.0,
-    initial_fy_dir_x,
-    initial_fy_dir_y,
-    1.5,
-    3.6
+    119.7736,              # fy_speed_1
+    -0.99993885,   # fy_dir_x
+    0.01105904,   # fy_dir_y
+    0.9758,                # drop_time_1
+    3.8205,                # clock_value_1
 ])
 
 # --- 定义参数边界 ---
@@ -115,7 +111,7 @@ print("\n--- Starting Optimization (L-BFGS-B) ---")
 result = minimize(
     objective_for_minimize,
     initial_guess,
-    method='SLSQP', # 使用 L-BFGS-B 或 SLSQP
+    method='L-BFGS-B', # 使用 L-BFGS-B 或 SLSQP
     bounds=bounds,
     options={
         'disp': True,

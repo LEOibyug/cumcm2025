@@ -146,10 +146,10 @@ initial_guess = np.array([
     0.01105904,   # fy_dir_y
     0.9758,                # drop_time_1
     3.8205,                # clock_value_1
-    0.9758 + 1.5,          # drop_time_2 (确保大于 drop_time_1 + 1.0)
+    0.9758 + 1,          # drop_time_2 (确保大于 drop_time_1 + 1.0)
     5,                # clock_value_2
-    0.9758 + 1.5 + 1.5,    # drop_time_3 (确保大于 drop_time_2 + 1.0)
-    5                 # clock_value_3
+    0.9758 + 1 + 1,    # drop_time_3 (确保大于 drop_time_2 + 1.0)
+    5                # clock_value_3
 ])
 
 # --- 定义参数边界 ---
@@ -176,7 +176,7 @@ print("\n--- Starting Optimization (SLSQP with Constraints) ---")
 result = minimize(
     objective_for_minimize,
     initial_guess,
-    method='L-BFGS-B', # SLSQP 支持约束
+    method='SLSQP', # SLSQP 支持约束 L-BFGS-B
     bounds=bounds,
     constraints=constraints, # 传递约束
     options={
