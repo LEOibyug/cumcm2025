@@ -2,7 +2,10 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D # 确保导入 Axes3D
+from mpl_toolkits.mplot3d import Axes3D 
+from tqdm import tqdm 
+import Items
+
 
 def plot_sphere(center=(0, 0, 0), radius=1.0, ax=None, **kwargs):
     """
@@ -18,9 +21,9 @@ def plot_sphere(center=(0, 0, 0), radius=1.0, ax=None, **kwargs):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-    # 减少点数以提高性能，如果需要更平滑可以增加
-    phi = np.linspace(0, np.pi, 50)
-    theta = np.linspace(0, 2 * np.pi, 50)
+    # 减少点数以提高性能
+    phi = np.linspace(0, np.pi, 15)
+    theta = np.linspace(0, 2 * np.pi, 15)
 
     phi, theta = np.meshgrid(phi, theta)
 
@@ -28,121 +31,176 @@ def plot_sphere(center=(0, 0, 0), radius=1.0, ax=None, **kwargs):
     y = center[1] + radius * np.sin(phi) * np.sin(theta)
     z = center[2] + radius * np.cos(phi)
 
-    # 返回 Poly3DCollection 对象，以便可以用于图例
     return ax.plot_surface(x, y, z, **kwargs)
 
-def plot_participants(current_time, participant, history_pos, fake_target, ax):
-    """
-    绘制所有参与者及其轨迹。
 
-    参数:
-    current_time (float): 当前仿真时间。
-    participant (list): 包含所有参与者对象的列表。
-    history_pos (dict): 存储每个参与者历史位置的字典。
-    fake_target (Items.Plot): 模拟的假目标实例。
-    ax (matplotlib.axes.Axes3D): 用于绘图的 Axes3D 对象。
-    """
-    ax.clear()  
-    ax.set_title(f"Simulation Time: {current_time:.2f}s")
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
+def is_line_segment_obscured_by_sphere(p1, p2, sphere_center, sphere_radius):
+    line_vec = p2 - p1
+    p1_to_center_vec = sphere_center - p1
 
-    all_x = []
-    all_y = []
-    all_z = []
-    plotted_labels = set()
-    sphere_handle = None 
-    import Items
+    line_vec_len_sq = np.dot(line_vec, line_vec)
 
-    for p in participant:
-        if not p.display: 
-            continue
-        
-        x, y, z = p.pos
-        all_x.append(x)
-        all_y.append(y)
-        all_z.append(z)
-        
-        # 确保 history_pos 中有 p 的键
-        if p not in history_pos:
-            history_pos[p] = []
-        history_pos[p].append(p.pos.copy()) # 记录当前位置
-
-        label_to_add = None
-        if isinstance(p, Items.Missile):
-            if 'Missile' not in plotted_labels:
-                label_to_add = 'Missile'
-                plotted_labels.add('Missile')
-            ax.scatter(x, y, z, color='red', marker='^', s=50, label=label_to_add)
-        elif isinstance(p, Items.Drone):
-            if 'Drone' not in plotted_labels:
-                label_to_add = 'Drone'
-                plotted_labels.add('Drone')
-            ax.scatter(x, y, z, color='green', marker='o', s=50, label=label_to_add)
-        elif isinstance(p, Items.Plot):
-            if p is fake_target:
-                if 'Fake Target' not in plotted_labels:
-                    label_to_add = 'Fake Target'
-                    plotted_labels.add('Fake Target')
-                ax.scatter(x, y, z, color='blue', marker='x', s=100, label=label_to_add)
-            else:
-                if 'Target Sample' not in plotted_labels:
-                    label_to_add = 'Target Sample'
-                    plotted_labels.add('Target Sample')
-                ax.scatter(x, y, z, color='purple', marker='.', s=20, label=label_to_add)
-        elif isinstance(p, Items.Smoke):
-            # 绘制球体
-            if 'Smoke Sphere' not in plotted_labels:
-                sphere_handle = plot_sphere(center=p.pos, radius=10, ax=ax, color='gray', alpha=0.3)
-                plotted_labels.add('Smoke Sphere')
-            else:
-                plot_sphere(center=p.pos, radius=10, ax=ax, color='gray', alpha=0.3)
-            
+    if line_vec_len_sq == 0:
+        return np.linalg.norm(p1 - sphere_center) <= sphere_radius
 
 
-        # 绘制轨迹
-        if len(history_pos[p]) > 1:
-            hist_arr = np.array(history_pos[p])
-            ax.plot(hist_arr[:, 0], hist_arr[:, 1], hist_arr[:, 2], linestyle='--', alpha=0.5, color='gray')
-
-    # 设置坐标轴范围
-    if all_x:
-        min_x, max_x = min(all_x), max(all_x)
-        min_y, max_y = min(all_y), max(all_y)
-        min_z, max_z = min(all_z), max(all_z)
-        
-
-        if 'Smoke Sphere' in plotted_labels:
-            min_x -= 10
-            max_x += 10
-            min_y -= 10
-            max_y += 10
-            min_z -= 10
-            max_z += 10
-
-        margin_factor = 0.1
-        x_range = max_x - min_x
-        y_range = max_y - min_y
-        z_range = max_z - min_z
-        
-        if x_range == 0: x_range = 10
-        if y_range == 0: y_range = 10
-        if z_range == 0: z_range = 10
-        
-        max_overall_range = max(x_range, y_range, z_range)
-        
-        ax.set_xlim(min_x - max_overall_range * margin_factor, max_x + max_overall_range * margin_factor)
-        ax.set_ylim(min_y - max_overall_range * margin_factor, max_y + max_overall_range * margin_factor)
-        ax.set_zlim(min_z - max_overall_range * margin_factor, max_z + max_overall_range * margin_factor)
-
-
-    handles, labels = ax.get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
+    t = np.dot(p1_to_center_vec, line_vec) / line_vec_len_sq
     
-    if sphere_handle is not None and 'Smoke Sphere' in plotted_labels:
-        if 'Smoke Sphere' not in by_label:
-            by_label['Smoke Sphere'] = sphere_handle
+    if t < 0.0:
+        closest_point_on_line = p1
+    elif t > 1.0:
+        closest_point_on_line = p2
+    else:
+        closest_point_on_line = p1 + t * line_vec
 
-    ax.legend(by_label.values(), by_label.keys())
+    dist_closest_to_center = np.linalg.norm(closest_point_on_line - sphere_center)
+
+    return dist_closest_to_center <= sphere_radius
+
+def run_simulation(
+    missile_list,                 # 导弹列表
+    drone_list,                   # 无人机列表
+    static_participants_list,     # 静态参与者列表 (包含 fake_target 和 target 采样点)
+    drop_events,                  # 投掷事件字典
+    time_step,                    # 仿真步长
+    simulation_duration,          # 仿真总时长
+    smoke_radius                  # 烟雾球体半径
+):
+    """
+    drop_events (dict): 投掷事件字典，键为投掷时间(float)，值为列表，
+                        列表中每个元素为 (无人机编号(int), 烟雾倒计时(float))。
+                        例如: {1.5: [(1, 3.6)], 5.0: [(2, 2.0), (1, 4.0)]}
+    返回:
+    dict: 包含遮挡时长的字典。
+          键为导弹ID (int)，值为该导弹的遮挡总时长。
+          特殊键 'all_missiles_obscured' (str)，值为所有导弹同时被遮挡的总时长。
+          例如: {1: 10.5, 2: 8.2, 'all_missiles_obscured': 3.1}
+    """
+    # 构建导弹和无人机的ID映射
+    missiles_by_id = {}
+    for m in missile_list:
+        missiles_by_id[m.id] = m
+    drones_by_id = {}
+    for d in drone_list:
+        drones_by_id[d.id] = d
+
+    initial_dynamic_participants = []
+    initial_dynamic_participants.extend(missile_list)
+    initial_dynamic_participants.extend(drone_list)
+    
+    current_simulation_dynamic_participants = list(initial_dynamic_participants)
+    # 提取用于遮挡检测的静态目标点
+    target_sample_points = [item for item in static_participants_list if isinstance(item, Items.Plot)]
+    num_target_lines_to_check = len(target_sample_points)
+    # 初始化遮挡时长
+    # 对于每个导弹，以及一个用于所有导弹同时被遮挡的累加器
+    obscured_durations = {m_id: 0.0 for m_id in missiles_by_id.keys()}
+    obscured_durations['all_missiles_obscured'] = 0.0
+    is_obscured = {m_id: False for m_id in missiles_by_id.keys()}
+    current_time_pre_calc = 0.0
+    
+    # 使用一个集合来跟踪已经触发的投弹事件，避免重复投弹
+    smoke_dropped_event_keys = set() 
+    
+    num_frames = int(simulation_duration / time_step)
+
+    # 将 drop_events 转换为列表，并按时间排序，方便遍历
+    # 这样可以避免在每次循环中遍历整个 drop_events 字典
+    sorted_drop_events = sorted(drop_events.items())
+    drop_event_idx = 0 # 用于跟踪当前要检查的投弹事件索引
+
+    for frame_idx in tqdm(range(num_frames + 1), desc="Simulating Frames"):
+        
+        # 检查是否需要投掷烟雾
+        # 遍历所有未触发的投弹事件
+        while drop_event_idx < len(sorted_drop_events):
+            drop_time_event, events_at_this_time = sorted_drop_events[drop_event_idx]
+            
+            # 如果当前仿真时间已经达到或超过投弹时间，并且在当前时间步长内
+            # 使用一个小的容差来处理浮点数比较
+            if current_time_pre_calc >= drop_time_event - time_step / 2 and \
+               current_time_pre_calc < drop_time_event + time_step / 2: # 检查当前时间步长是否“跨过”了投弹时间
+                
+                for drone_id, clock_value in events_at_this_time:
+                    event_key = (drop_time_event, drone_id, clock_value) # 使用原始的 drop_time_event 作为 key
+                    if event_key not in smoke_dropped_event_keys:
+                        drone_to_drop = drones_by_id.get(drone_id)
+                        if drone_to_drop:
+                            smoke = drone_to_drop.drop(clock_value)
+                            current_simulation_dynamic_participants.append(smoke)
+                            smoke_dropped_event_keys.add(event_key)
+                        else:
+                            print(f"Warning: Drone with ID {drone_id} not found for drop event at time {drop_time_event}s.")
+                drop_event_idx += 1 # 处理完这个时间点的所有事件，移动到下一个
+            elif current_time_pre_calc > drop_time_event + time_step / 2:
+                # 如果当前时间已经远远超过这个投弹时间，说明这个事件可能被跳过了
+                # 或者在之前的某个时间步长中被处理了（如果 drop_time_event 接近上一个时间步长）
+                # 无论如何，我们应该继续检查下一个投弹事件
+                drop_event_idx += 1
+            else:
+                # 如果当前时间还没到这个投弹时间，就停止检查，等待下一个时间步长
+                break
+
+
+        # 更新所有动态参与者的位置
+        for p in current_simulation_dynamic_participants:
+            p.update(time_step)
+        
+        active_smokes = [s for s in current_simulation_dynamic_participants if isinstance(s, Items.Smoke) and s.display]
+        # 跟踪每个导弹的遮挡
+        missiles_obscured_status = {} # {missile_id: True/False}
+        
+        # 遍历所有导弹，进行单独的遮挡检测
+        for missile_id, missile_obj in missiles_by_id.items():
+            missile_pos = missile_obj.pos
+            
+            current_missile_obscured_line_count = 0
+            
+            if active_smokes and target_sample_points:
+                for target_sample in target_sample_points:
+                    line_p1 = target_sample.pos
+                    line_p2 = missile_pos 
+                    
+                    line_is_obscured_by_any_smoke = False
+                    for smoke_obj in active_smokes:
+                        if is_line_segment_obscured_by_sphere(line_p1, line_p2, smoke_obj.pos, smoke_radius):
+                            line_is_obscured_by_any_smoke = True
+                            break 
+                    
+                    if line_is_obscured_by_any_smoke:
+                        current_missile_obscured_line_count += 1
+            
+            # 判断是否被完全遮挡
+            is_this_missile_fully_obscured = (num_target_lines_to_check > 0) and \
+                                              (current_missile_obscured_line_count == num_target_lines_to_check)
+            
+            missiles_obscured_status[missile_id] = is_this_missile_fully_obscured
+            
+            if is_this_missile_fully_obscured:
+                if not is_obscured[missile_id] :
+                    print(f"\nMissile {missile_id} is fully obscured at time {current_time_pre_calc}s")
+                    is_obscured[missile_id] = True
+                obscured_durations[missile_id] += time_step
+            elif is_obscured[missile_id] :
+                print(f"Missile {missile_id} is no longer fully obscured at time {current_time_pre_calc}s")
+                is_obscured[missile_id] = False
+        
+        # 判断所有导弹是否同时被遮挡
+        all_missiles_simultaneously_obscured = False
+        if missiles_by_id: 
+            all_missiles_simultaneously_obscured = all(status for status in missiles_obscured_status.values())
+        
+        if all_missiles_simultaneously_obscured:
+            obscured_durations['all_missiles_obscured'] += time_step
+        
+        current_time_pre_calc += time_step
+    
+    print("Simulation complete. Obscured Durations:")
+    for key, value in obscured_durations.items():
+        if key == 'all_missiles_obscured':
+            print(f"  All Missiles Obscured: {value:.4f}s")
+        else:
+            print(f"  Missile {key} Obscured: {value:.4f}s")
+            
+    return obscured_durations
 
