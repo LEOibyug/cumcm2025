@@ -64,7 +64,8 @@ def run_simulation(
     drop_events,                  # 投掷事件字典
     time_step,                    # 仿真步长
     simulation_duration,          # 仿真总时长
-    smoke_radius                  # 烟雾球体半径
+    smoke_radius,                  # 烟雾球体半径
+    exist_smoke = []
 ):
     """
     drop_events (dict): 投掷事件字典，键为投掷时间(float)，值为列表，
@@ -91,6 +92,7 @@ def run_simulation(
         drones_by_id[d.id] = d
 
     initial_dynamic_participants = []
+    initial_dynamic_participants.extend(exist_smoke)
     initial_dynamic_participants.extend(missile_list)
     initial_dynamic_participants.extend(drone_list)
     

@@ -19,9 +19,9 @@ SMOKE_RADIUS = 10
 fake_target = Items.Plot(np.array([0, 0, 0]))
 target = Items.Volume(np.array([0, 200, 5]), 7, 10)
 
-static_target_samples = []
-for samples in target.get_sample():
-    static_target_samples.append(samples)
+static_target_samples = [Items.Plot(np.array([0, 200, 5])), Items.Plot(np.array([0, 200, 0])), Items.Plot(np.array([0, 200, 10]))]
+# for samples in target.get_sample():
+#     static_target_samples.append(samples)
 
 # --- 设置日志文件 ---
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

@@ -10,9 +10,9 @@ from tqdm import tqdm
 
 fake_target = Items.Plot(np.array([0, 0, 0]))
 target = Items.Volume(np.array([0, 200, 5]), 7, 10)
-stastic_participants_list = []
-for i in target.get_sample():
-    stastic_participants_list.append(i)
+stastic_participants_list = [Items.Plot(np.array([0, 200, 5]))]
+# for i in target.get_sample():
+#     stastic_participants_list.append(i)
 
 m1 = Items.Missile([20000, 0, 2000], fake_target,1)
 # m2 = Items.Missile(np.array([19000, 600, 2100]), fake_target)

@@ -33,14 +33,11 @@ log_filename = f"logs/optimization_log_bayesian_{timestamp}.csv" # 修改日志�
 
 # --- 定义优化目标函数 (使用 @use_named_args 装饰器) ---
 @use_named_args([
-    Real(70.0, 140.0, name='fy_speed_1'),
-    Real(-1.0, 0, name='fy_dir_x'),
-    Real(0.0, 1.0, name='fy_dir_y'), # 注意：这里是你的 bounds[2]，之前是 (-1.0, 1.0)
-    Real(0.1, SIMULATION_DURATION - 0.1, name='drop_time'),
-    Real(0.1, 10.0, name='clock_value')
+    Real(1.873, 10, name='drop_t'),
+    Real(0, 10, name='clock'),
 ])
-def objective_for_bayesian(fy_speed_1, fy_dir_x, fy_dir_y, drop_time, clock_value):
-    specified_params = []
+def objective_for_bayesian(drop_t, clock):
+    specified_params = [103.6163, 0.9956142, 0.0935541,0.8725,0.2591]
     # 每次调用时打开并追加写入日志文件，然后关闭
     # 这样可以避免全局变量的复杂性，并确保每次评估都被记录
     # 但如果函数评估非常频繁，可能会有性能开销，可以考虑在回调中集中写入
@@ -55,13 +52,10 @@ def objective_for_bayesian(fy_speed_1, fy_dir_x, fy_dir_y, drop_time, clock_valu
         current_missile_list = [current_m1]
 
         # 构建无人机方向向量并归一化
-        fy_dir_raw = np.array([fy_dir_x, fy_dir_y, 0.0])
+        fy_dir_raw = np.array([specified_params[1], specified_params[2], 0.0])
         norm = np.linalg.norm(fy_dir_raw)
         
         if norm == 0:
-            print(f"  Warning: Direction vector is zero for params: {[fy_speed_1, fy_dir_x, fy_dir_y, drop_time, clock_value]}. Returning large penalty.")
-            log_file.write(f"Invalid,{fy_speed_1},{fy_dir_x},{fy_dir_y},{drop_time},{clock_value},N/A (Zero Dir Vector)\n")
-            log_file.flush()
             return 1e10
         else:
             fy_dir_1 = fy_dir_raw / norm
@@ -69,18 +63,19 @@ def objective_for_bayesian(fy_speed_1, fy_dir_x, fy_dir_y, drop_time, clock_valu
 
         # 重新创建无人机实例
         fy_initial_pos = np.array([17800, 0, 1800])
-        current_fy1 = Items.Drone(fy_initial_pos, fy_dir_1, fy_speed_1, 1)
+        current_fy1 = Items.Drone(fy_initial_pos, fy_dir_1, specified_params[0], 1)
         current_drone_list = [current_fy1]
 
         # 构建投掷事件字典
-        drop_events = {drop_time: [(1, clock_value)]}
+        drop_events = {specified_params[3]: [(1, specified_params[4])], 
+                       drop_t: [(1, clock)]
+                        }
 
         # --- 打印当前参数 ---
         print(f"\n--- Running simulation with parameters ---")
-        print(f"  fy_speed_1: {fy_speed_1:.4f}")
-        print(f"  fy_dir_1 (raw): [{fy_dir_x:.4f}, {fy_dir_y:.4f}] -> (norm): {fy_dir_1}")
-        print(f"  drop_time: {drop_time:.4f}")
-        print(f"  clock_value: {clock_value:.4f}")
+        print(f"  fy_speed_1: {specified_params[0]:.4f}")
+        print(f"  fy_dir_1 (raw): [{specified_params[1]:.4f}, {specified_params[2]:.4f}] -> (norm): {fy_dir_1}")
+        print(f"  drop_events: {drop_events}")
 
         # --- 运行仿真 ---
         results = utils.run_simulation(
@@ -98,25 +93,22 @@ def objective_for_bayesian(fy_speed_1, fy_dir_x, fy_dir_y, drop_time, clock_valu
         
         # 记录当前迭代的参数和结果到日志文件
         # 注意：这里没有迭代计数器，skopt 的回调函数可以提供
-        log_file.write(f"Evaluation,{fy_speed_1},{fy_dir_x},{fy_dir_y},{drop_time},{clock_value},{obscured_duration}\n")
+        log_file.write(f"Evaluation,{drop_t},{clock},{obscured_duration}\n")
         log_file.flush() # 确保每次写入后都立即刷新到磁盘
 
         return -obscured_duration # 返回负值以进行最小化
 
 # --- 定义参数空间 (与 @use_named_args 装饰器中的定义一致) ---
 space = [
-    Real(70.0, 140.0, name='fy_speed_1'),
-    Real(-1.0, 0, name='fy_dir_x'),
-    Real(0.0, 1.0, name='fy_dir_y'), # 注意：这里是你的 bounds[2] (0, 1.0)
-    Real(0.1, SIMULATION_DURATION - 0.1, name='drop_time'),
-    Real(0.1, 10.0, name='clock_value')
+    Real(1.873, 10, name='drop_t'),
+    Real(0, 10, name='clock'),
 ]
 
 # --- 定义初始点 (可选，用于引导贝叶斯优化) ---
 # skopt 接受一个列表的列表作为初始点，每个内层列表是一个参数组合
 # 我们可以使用你提供的 initial_guess 作为唯一的初始点
 initial_points = [
-    [119.6163, -0.9996142,0.0135541, 0.9725, 3.2591]
+    [1.874,0.0]
 ]
 #    [119.7736, -0.99993885, 0.01105904, 0.9758, 3.8205]
 

@@ -28,11 +28,11 @@ class Missile(Item):
         self.pos = self.pos + normalized_direction * self.speed * time_step
 
 class Smoke(Item):
-    def __init__(self,pos,clock):
+    def __init__(self,pos,clock,sustain=20,display = False):
         super().__init__(pos)
         self.clock = clock
-        self.display = False
-        self.sustain = 20
+        self.display = display
+        self.sustain = sustain
     
     def update(self, time_step):
         if self.display:
@@ -75,23 +75,26 @@ class Volume(Item):
     def get_sample(self):
         samples = []
         z_top = self.pos[2] + self.height / 2
+        z_bottom = self.pos[2] - self.height / 2
         # 1. 圆柱侧面采样
-        for z_offset in np.arange(-self.height / 2, self.height / 2 + 1,1): 
-            current_z = self.pos[2] + z_offset
-            if current_z > z_top:
-                current_z = z_top 
-            for i in range(20):
-                angle = 2 * np.pi * i / 20
-                x = self.pos[0] + self.radius * np.cos(angle)
-                y = self.pos[1] + self.radius * np.sin(angle)
-                samples.append(Plot(np.array([x, y, current_z])))
+        for i in range(20):
+            angle = 2 * np.pi * i / 20
+            x = self.pos[0] + self.radius * np.cos(angle)
+            y = self.pos[1] + self.radius * np.sin(angle)
+            samples.append(Plot(np.array([x, y, self.pos[2]])))
+            samples.append(Plot(np.array([x, y, z_top])))
+            samples.append(Plot(np.array([x, y, z_bottom])))
+
+            
         
-        # 2. 上表面采样
-        x_coords = np.arange(self.pos[0] - self.radius, self.pos[0] + self.radius + 1,1)
-        y_coords = np.arange(self.pos[1] - self.radius, self.pos[1] + self.radius + 1,1)
-        for x_current in x_coords:
-            for y_current in y_coords:
-                distance_from_center_sq = (x_current - self.pos[0])**2 + (y_current - self.pos[1])**2
-                if distance_from_center_sq <= self.radius**2:
-                    samples.append(Plot(np.array([x_current, y_current, z_top])))
+        # # 2. 上表面采样
+        # x_coords = np.arange(self.pos[0] - self.radius, self.pos[0] + self.radius + 1,1)
+        # y_coords = np.arange(self.pos[1] - self.radius, self.pos[1] + self.radius + 1,1)
+        # for x_current in x_coords:
+        #     for y_current in y_coords:
+        #         distance_from_center_sq = (x_current - self.pos[0])**2 + (y_current - self.pos[1])**2
+        #         if distance_from_center_sq <= self.radius**2:
+        #             samples.append(Plot(np.array([x_current, y_current, z_top])))
+
+        samples.append(Plot(np.array([self.pos[0], self.pos[1], z_top])))
         return samples
